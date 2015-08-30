@@ -8,6 +8,9 @@ module.exports = function(grunt) {
     // the name of the field in the json object that describes the version string
     var _version_field      = "version";
 
+    // Show/Hide debug console.log statements -- to be set in the code by any developer who wants to debug the grunt plugin code.
+    var debug = false;
+
     // array of objects, each describing an incrementable part
     var _incrementableParts = [];
 
@@ -394,7 +397,7 @@ module.exports = function(grunt) {
         }
 
         regexp = new RegExp(regexp);
-        console.log('v regexp: ', regexp);
+        if (debug) console.log('v regexp: ', regexp);
 
         var m = regexp.exec(version_string);
         var lsi = null;
@@ -413,7 +416,7 @@ module.exports = function(grunt) {
 
         // determine the incrementable part as either the *enforced* part or using the lowest-priority incrementable part detected in the input
         var inc_part_name = incrementable_part_name || (lsi && lsi["name"]);
-        console.log('inc part name: ', inc_part_name, m, m.length - 1, retVal, lsi);
+        if (debug) console.log('inc part name: ', inc_part_name, m, m.length - 1, retVal, lsi);
 
         // check whether the incrementable part is valid
         if ( _incrementablePartsToSimpleArray(null).indexOf(inc_part_name) === -1 ) {
@@ -424,7 +427,11 @@ module.exports = function(grunt) {
 
         retVal.incrementable_part_name = inc_part_name;
         var sortedArrSimple = _incrementablePartsToSimpleArray(sortedArr);
-        retVal.least_significant_part_index = sortedArrSimple.indexOf(inc_part_name);
+        var inc_idx = sortedArrSimple.indexOf(inc_part_name);
+        if (debug) console.log('inc part level: ', inc_idx, retVal);
+        if (retVal.least_significant_part_index < inc_idx) {
+            retVal.least_significant_part_index = inc_idx;
+        }
 
         return retVal;
 
@@ -464,7 +471,7 @@ module.exports = function(grunt) {
             }
         }
 
-        console.log('priority: ', priorityOfIncrementablePart, parsedVersionInfo.least_significant_part_index);
+        if (debug) console.log('priority: ', priorityOfIncrementablePart, parsedVersionInfo.least_significant_part_index);
 
         // (re)set incrementable parts of both higher or lower priority so long as they are undefined
         // 
@@ -485,7 +492,7 @@ module.exports = function(grunt) {
         
         parsedVersionInfo.matched = parsed_version;
                                                                   
-        console.log('incremented: ', parsedVersionInfo);
+        if (debug) console.log('incremented: ', parsedVersionInfo);
                                                           
         return parsedVersionInfo;
 
