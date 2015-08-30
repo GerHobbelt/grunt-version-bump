@@ -42,6 +42,7 @@ exports.version_bump_tester = {
         grunt.file.copy('tests/fixtures/failure_json_with_no_version.json', 'tests/tmp/failure_json_with_no_version.json');
         grunt.file.copy('tests/fixtures/failure_not_a_json.json', 'tests/tmp/failure_not_a_json.json');
         grunt.file.copy('tests/fixtures/success_json_with_version.json', 'tests/tmp/success_json_with_version.json');
+        grunt.file.copy('tests/fixtures/success_json_with_shorter_version.json', 'tests/tmp/success_json_with_shorter_version.json');
         grunt.file.copy('tests/fixtures/success_version_structure.json', 'tests/tmp/success_version_structure.json');
         grunt.file.copy('tests/fixtures/failure_version_structure_missing_field.json', 'tests/tmp/failure_version_structure_missing_field.json');
         grunt.file.copy('tests/fixtures/failure_version_structure_wrong_field_type.json', 'tests/tmp/failure_version_structure_wrong_field_type.json');
@@ -244,5 +245,65 @@ exports.version_bump_tester = {
           test.equal(contains(stdout, 'Returned from callback function: 1.3.0-SNAPSHOT.1'), true, getTypicalErrorMessage(error, stdout, stderr));
           test.done();
         });
-    }
+    },
+    /*
+    Test if callback function returns correct value
+     */
+    success_bump_returns_correct_shorter_version: function(test) {
+        test.expect(1);
+        callGruntfile('success_bump_minor_shorter_version.js', function (error, stdout, stderr) {
+          test.equal(contains(stdout, 'Returned from callback function: 1.3.0'), true, getTypicalErrorMessage(error, stdout, stderr));
+          test.done();
+        });
+    },
+    /*
+        Test if major bump works well
+     */
+    success_bump_major_for_short_version: function(test) {
+        test.expect(1);
+        callGruntfile('success_bump_major_for_short_version.js', function (error, stdout, stderr) {
+            test.equal(contains(stdout, 'bumped [major] from 1.2.3 to 2.0.0'), true, getTypicalErrorMessage(error, stdout, stderr));
+            test.done();
+        });
+    },
+    /*
+        Test if minor bump works well
+     */
+    success_bump_minor_for_short_version: function(test) {
+        test.expect(1);
+        callGruntfile('success_bump_minor_for_short_version.js', function (error, stdout, stderr) {
+            test.equal(contains(stdout, 'bumped [minor] from 1.2.3 to 1.3.0'), true, getTypicalErrorMessage(error, stdout, stderr));
+            test.done();
+        });
+    },
+    /*
+        Test if patch bump works well
+     */
+    success_bump_patch_for_short_version: function(test) {
+        test.expect(1);
+        callGruntfile('success_bump_patch_for_short_version.js', function (error, stdout, stderr) {
+            test.equal(contains(stdout, 'bumped [patch] from 1.2.3 to 1.2.4'), true, getTypicalErrorMessage(error, stdout, stderr));
+            test.done();
+        });
+    },
+    /*
+     Test if stage bump works well
+     */
+    success_bump_stage_for_short_version: function(test) {
+        test.expect(1);
+        callGruntfile('success_bump_stage_for_short_version.js', function (error, stdout, stderr) {
+            test.equal(contains(stdout, 'bumped [stage] from 1.2.3 to 1.2.0-SNAPSHOT'), true, getTypicalErrorMessage(error, stdout, stderr));
+            test.done();
+        });
+    },
+    /*
+     Test if build bump works well
+     */
+    success_bump_build_for_short_version: function(test) {
+        test.expect(1);
+        callGruntfile('success_bump_build_for_short_version.js', function (error, stdout, stderr) {
+            test.equal(contains(stdout, 'bumped [build] from 1.2.3 to 1.2.3-SNAPSHOT.1'), true, getTypicalErrorMessage(error, stdout, stderr));
+            test.done();
+        });
+    },
 };
