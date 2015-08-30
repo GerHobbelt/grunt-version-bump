@@ -12,7 +12,7 @@ module.exports = function(grunt) {
     var _incrementableParts = [];
 
     var external_options = {};
-
+    
     grunt.registerTask(_grunt_plugin_name, 'version bump', function() {
 
         // the "return value"
@@ -21,6 +21,8 @@ module.exports = function(grunt) {
         // whether or not to read and write to a file
         var use_file = true;
 
+        var version_string;
+
         external_options['condition'] = grunt.option('condition') || (grunt.config(_grunt_plugin_name) ? grunt.config(_grunt_plugin_name)['condition'] : undefined);
         external_options['input_version'] = grunt.option('input_version') || (grunt.config(_grunt_plugin_name) ? grunt.config(_grunt_plugin_name)['input_version'] : undefined);
         external_options['quiet'] = grunt.option('quiet') || (grunt.config(_grunt_plugin_name) ? grunt.config(_grunt_plugin_name)['quiet'] : undefined);
@@ -28,18 +30,17 @@ module.exports = function(grunt) {
         if (external_options['input_version']) {
             // when input_version option is set we use it as the version to bump, and we do not work with reading and writing to from/to files
             use_file = false;
-            var version_string = external_options['input_version'];
+            version_string = external_options['input_version'];
         }
-
 
         _incrementableParts = _getIncrementableParts();
         _testIncrementablePartsIntegrity();
 
-        // take the incremenetable part from a provided argument or use the lowest-priority incrementable part
-        var incrementable_part_name = this.args[0] || (grunt.config(_grunt_plugin_name) ? grunt.config(_grunt_plugin_name)['incrementType'] : false) || _incrementablePartsSortByField(null, "priority").slice(-1)[0]["name"];
+        // take the *enforced* incrementable part (if specified) from a provided argument
+        var incrementable_part_name = this.args[0] || (grunt.config(_grunt_plugin_name) ?grunt.config(_grunt_plugin_name)['incrementType'] : false);
 
-        // check whether the incremenetable part is valid
-        if ( _incrementablePartsToSimpleArray(null).indexOf(incrementable_part_name) === -1 ) {
+        // check whether the incrementable part is valid
+        if ( incrementable_part_name && _incrementablePartsToSimpleArray(null).indexOf(incrementable_part_name) === -1 ) {
             grunt.fail.fatal(
                 new Error("Only these incrementable parts are supported: " + _incrementablePartsToSimpleArray(_incrementablePartsSortByField(null, "order")).join(","))
             );
@@ -62,10 +63,13 @@ module.exports = function(grunt) {
             })
             // iterate over the rest
             .forEach(function(file_path) {
+                var file_content;
+                var file_content_json;
+                var version_string;
 
                 // get file content
                 try {
-                    var file_content = grunt.file.read(file_path);
+                    file_content = grunt.file.read(file_path);
                 } catch(err) {
                     grunt.fail.fatal(new Error("Couldn't read " + file_path + ". Error: " + err.message));
                 }
@@ -75,32 +79,31 @@ module.exports = function(grunt) {
 
                 // parse file content as a JSON
                 try {
-                    var file_content_json = JSON.parse(file_content);
+                    file_content_json = JSON.parse(file_content);
                 } catch(err) {
                     grunt.fail.fatal(new Error("Couldn't parse file (" + file_path + ") as JSON. Error: " + err.message));
                 }
 
                 // extract version string
-                var version_string = file_content_json[_version_field];
+                version_string = file_content_json[_version_field];
 
                 if (typeof(version_string) === "undefined") {
                     grunt.fail.fatal(new Error("Couldn't find attribute version in the JSON parse of " + file_path));
                 }
 
-                var parsedVersion = _parseVersion(version_string);
+                var parsedVersion = _parseVersion(version_string, incrementable_part_name);
 
-                if (_checkConditionIfExists(parsedVersion, external_options['condition'])) {
+                if (_checkConditionIfExists(parsedVersion.matched, external_options['condition'])) {
                     // alter the json object with a bumper version string
 
                     new_version_string = _stringifyVersion(
                         _incrementIncrementablePart(
-                            parsedVersion,
-                            incrementable_part_name
+                            parsedVersion
                         )
                     );
                     file_content_json[_version_field] = new_version_string;
 
-                    log('ok', 'bumped [' + incrementable_part_name + '] from ' + version_string + ' to ' + file_content_json[_version_field]);
+                    log('ok', 'bumped [' + parsedVersion.incrementable_part_name + '] from ' + version_string + ' to ' + file_content_json[_version_field]);
 
                     // save the file with the altered json
                     grunt.file.write(
@@ -116,18 +119,17 @@ module.exports = function(grunt) {
                 }
             });
         } else { // use_file === false
-            var parsedVersion = _parseVersion(version_string);
+            var parsedVersion = _parseVersion(version_string, incrementable_part_name);
 
-            if (_checkConditionIfExists(parsedVersion, external_options['condition'])) {
+            if (_checkConditionIfExists(parsedVersion.matched, external_options['condition'])) {
 
                 new_version_string = _stringifyVersion(
                     _incrementIncrementablePart(
-                        parsedVersion,
-                        incrementable_part_name
+                        parsedVersion
                     )
                 );
 
-                log('ok', 'bumped [' + incrementable_part_name + '] from ' + version_string + ' to ' + new_version_string);
+                log('ok', 'bumped [' + parsedVersion.incrementable_part_name + '] from ' + version_string + ' to ' + new_version_string);
 
             } else {
                 log('ok', 'condition [' + external_options['condition'] + '] was not met. skipping.');
@@ -135,7 +137,9 @@ module.exports = function(grunt) {
         }
 
         grunt.log.ok("RETURN_VALUE: " + new_version_string);
-        grunt.config(_grunt_plugin_name).callback(new_version_string);
+        if (typeof grunt.config(_grunt_plugin_name).callback === "function") {
+            grunt.config(_grunt_plugin_name).callback(new_version_string);
+        }
     }); // registerTask
 
     /*
@@ -278,7 +282,7 @@ module.exports = function(grunt) {
     function _incrementablePartsSortByField(arr, field) {
 
         if ( ! arr ) {
-            var arr = _incrementableParts;
+            arr = _incrementableParts;
         }
 
         var retVal = arr.slice();
@@ -304,7 +308,7 @@ module.exports = function(grunt) {
     function _incrementablePartsToSimpleArray(arr) {
 
         if ( ! arr) {
-            var arr = _incrementableParts;
+            arr = _incrementableParts;
         }
 
         var retVal = [];
@@ -328,7 +332,6 @@ module.exports = function(grunt) {
         var retVal = "";
 
         var sortedArr = _incrementablePartsSortByField(null, "order");
-
         var sortedArrLength = sortedArr.length;
 
         for (var i = 0 ; i < sortedArrLength ; i++) {
@@ -346,12 +349,13 @@ module.exports = function(grunt) {
     /*
         take an array of parsed version string and convert it back to a version string
     */
-    function _stringifyVersion(parsed_version) {
-
+    function _stringifyVersion(parsedVersionInfo) {
+        var parsed_version = parsedVersionInfo.matched;
+        
         var retVal = "";
 
         var sortedArr = _incrementablePartsSortByField(null, "order");
-        var sortedArrLength = sortedArr.length;
+        var sortedArrLength = Math.min(sortedArr.length, parsedVersionInfo.least_significant_part_index + 1);
 
         for (var i = 0 ; i < sortedArrLength ; i++) {
             retVal += sortedArr[i]['prefix'] + parsed_version[sortedArr[i]['name']];
@@ -362,11 +366,15 @@ module.exports = function(grunt) {
     } // _stringifyVersion
 
     /*
-        take an version string and parse it to an object
+        take a version string and parse it to an object
     */
-    function _parseVersion(version_string) {
+    function _parseVersion(version_string, incrementable_part_name) {
 
-        var retVal = {};
+        var retVal = {
+            matched: {},
+            incrementable_part_name: null,
+            least_significant_part_index: 0
+        };
 
         var regexp = "";
 
@@ -374,27 +382,49 @@ module.exports = function(grunt) {
         var sortedArrLength = sortedArr.length;
 
         for (var i = 0 ; i < sortedArrLength ; i++) {
+            var optional = !!sortedArr[i]['optional'];
             if (typeof(sortedArr[i]['prefix']) !== "undefined") {
-                regexp += sortedArr[i]['prefix'];
+                regexp += "(?:" + sortedArr[i]['prefix'] + (optional ? ")?" : ")");
             }
             if (typeof(sortedArr[i]['values']) !== "undefined") {
-                regexp += "(" + sortedArr[i]['values'].join("|") + ")";
+                regexp += "(" + sortedArr[i]['values'].join("|") + ")" + (optional ? "?" : "");
             } else {
-                regexp += "(\\d+)";
+                regexp += "(\\d+)" + (optional ? "?" : "");
             }
         }
 
         regexp = new RegExp(regexp);
+        console.log('v regexp: ', regexp);
 
         var m = regexp.exec(version_string);
+        var lsi = null;
 
         if (m != null) {
             for (var i = 0 ; i < sortedArrLength ; i++) {
-                retVal[sortedArr[i]['name']] = _isInt(m[i+1]) ? parseInt(m[i+1]) : m[i+1];
+                if (m[i+1] !== undefined) {
+                    lsi = sortedArr[i];
+                    retVal.least_significant_part_index = i;
+                    retVal.matched[lsi['name']] = _isInt(m[i+1]) ? parseInt(m[i+1]) : m[i+1];
+                }
             }
         } else {
             grunt.fail.fatal(new Error("current version (" + version_string + ") does not meet " + _calcPattern() + " pattern"));
         }
+
+        // determine the incrementable part as either the *enforced* part or using the lowest-priority incrementable part detected in the input
+        var inc_part_name = incrementable_part_name || (lsi && lsi["name"]);
+        console.log('inc part name: ', inc_part_name, m, m.length - 1, retVal, lsi);
+
+        // check whether the incrementable part is valid
+        if ( _incrementablePartsToSimpleArray(null).indexOf(inc_part_name) === -1 ) {
+            grunt.fail.fatal(
+                new Error("Only these incrementable parts are supported: " + _incrementablePartsToSimpleArray(_incrementablePartsSortByField(null, "order")).join(","))
+            );
+        }
+
+        retVal.incrementable_part_name = inc_part_name;
+        var sortedArrSimple = _incrementablePartsToSimpleArray(sortedArr);
+        retVal.least_significant_part_index = sortedArrSimple.indexOf(inc_part_name);
 
         return retVal;
 
@@ -404,8 +434,10 @@ module.exports = function(grunt) {
         increment a specific incrementable part and reset the rest (if resettable)
         return the altered parsed_version
     */
-    function _incrementIncrementablePart(parsed_version, incrementable_part_name) {
-
+    function _incrementIncrementablePart(parsedVersionInfo) {
+        var parsed_version = parsedVersionInfo.matched;
+        var incrementable_part_name = parsedVersionInfo.incrementable_part_name;
+        
         var sortedArr = _incrementablePartsSortByField(null, "priority");
         var sortedArrSimple = _incrementablePartsToSimpleArray(sortedArr);
 
@@ -419,11 +451,11 @@ module.exports = function(grunt) {
             parsed_version[incrementable_part_name]++;
         }
 
-        // reset incrementable parts of lower priority
+        // reset incrementable parts of lower priority so long as they exist and are not optional
         for (var i = priorityOfIncrementablePart + 1 ; i < sortedArr.length ; i++) {
             var val = sortedArr[i];
 
-            if (val['resettable'] || false) {
+            if (val['resettable'] && parsed_version[val['name']] !== undefined && !val['optional']) {
                 if (typeof(val['values']) !== "undefined") {
                     parsed_version[val['name']] = val['values'][0];
                 } else {
@@ -432,7 +464,30 @@ module.exports = function(grunt) {
             }
         }
 
-        return parsed_version;
+        console.log('priority: ', priorityOfIncrementablePart, parsedVersionInfo.least_significant_part_index);
+
+        // (re)set incrementable parts of both higher or lower priority so long as they are undefined
+        // 
+        // This can be necessary when a 'forced' incrementable_part_name of lower priority than 
+        // already available in the parsed_version has been specified.
+        sortedArr = _incrementablePartsSortByField(null, "order");
+        for (var i = 0 ; i < parsedVersionInfo.least_significant_part_index ; i++) {
+            var val = sortedArr[i];
+
+            if (val['resettable'] && parsed_version[val['name']] === undefined) {
+                if (typeof(val['values']) !== "undefined") {
+                    parsed_version[val['name']] = val['values'][0];
+                } else {
+                    parsed_version[val['name']] = val['resetTo'];
+                }
+            }
+        }      
+        
+        parsedVersionInfo.matched = parsed_version;
+                                                                  
+        console.log('incremented: ', parsedVersionInfo);
+                                                          
+        return parsedVersionInfo;
 
     } // _incrementIncrementablePart
 

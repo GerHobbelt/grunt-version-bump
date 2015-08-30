@@ -20,4 +20,4 @@ module.exports = function(grunt) {
         'nodeunit'
     ]);
     grunt.registerTask('default', ['test']);
-}
+};

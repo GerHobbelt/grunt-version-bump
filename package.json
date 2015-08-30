@@ -1,7 +1,7 @@
 {
   "name": "grunt-version-bump",
   "version": "1.0.5",
-  "description": "",
+  "description": "A grunt plugin for bumping a version property in JSON files",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -10,7 +10,9 @@
   "scripts": {
     "test": "grunt test"
   },
-  "author": "Idan Mittelpunkt",
+  "author": {
+    "name": "Idan Mittelpunkt"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/xl8/grunt-version-bump/issues"
