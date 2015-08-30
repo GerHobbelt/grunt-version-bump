@@ -222,9 +222,6 @@ module.exports = function(grunt) {
         if (typeof item['resettable'] === 'undefined') {
             grunt.fail.fatal(new Error('invalid version structure: missing field resettable'));
         }
-        if (typeof item['resetTo'] === 'undefined') {
-            item['resetTo'] = 0;
-        }
     } // _testIncrementablePartsIntegrity_structureAndDefaults
 
     /*
@@ -246,7 +243,7 @@ module.exports = function(grunt) {
         if (typeof item['resettable'] !== 'boolean') {
             grunt.fail.fatal(new Error('invalid version structure: resettable field should be boolean'));
         }
-        if ((typeof item['resetTo'] !== 'number') || (item['resetTo'] < 0)) {
+        if (typeof item['resetTo'] !== 'undefined' && (typeof item['resetTo'] !== 'number' || item['resetTo'] < 0)) {
             grunt.fail.fatal(new Error('invalid version structure: resetTo field should be non-negative integer'));
         }
     } // _testIncrementablePartsIntegrity_fieldTypes
@@ -449,46 +446,42 @@ module.exports = function(grunt) {
         var sortedArrSimple = _incrementablePartsToSimpleArray(sortedArr);
 
         var priorityOfIncrementablePart = sortedArrSimple.indexOf(incrementable_part_name);
-        // increment
-        if (typeof(sortedArr[priorityOfIncrementablePart]['values']) !== "undefined") {
-            // take next value
-            var currentValueIndex = sortedArr[priorityOfIncrementablePart]['values'].indexOf(parsed_version[incrementable_part_name]);
-            parsed_version[incrementable_part_name] = sortedArr[priorityOfIncrementablePart]['values'][(currentValueIndex+1) % sortedArr[priorityOfIncrementablePart]['values'].length];
-        } else {
-            parsed_version[incrementable_part_name]++;
+        // increment -- but only when that part was already specified in the parsed_version input!
+        if (parsed_version[incrementable_part_name] !== undefined) {
+            if (typeof(sortedArr[priorityOfIncrementablePart]['values']) !== "undefined") {
+                // take next value
+                var currentValueIndex = sortedArr[priorityOfIncrementablePart]['values'].indexOf(parsed_version[incrementable_part_name]);
+                parsed_version[incrementable_part_name] = sortedArr[priorityOfIncrementablePart]['values'][(currentValueIndex+1) % sortedArr[priorityOfIncrementablePart]['values'].length];
+            } else {
+                parsed_version[incrementable_part_name]++;
+            }
         }
-
-        // reset incrementable parts of lower priority so long as they exist and are not optional
-        for (var i = priorityOfIncrementablePart + 1 ; i < sortedArr.length ; i++) {
+        
+        // Reset incrementable parts of both higher or lower priority so long as they are undefined
+        // 
+        // This can be necessary when a 'forced' incrementable_part_name of lower priority than 
+        // already available in the parsed_version has been specified.
+        //
+        // Also reset incrementable parts of lower priority so long as they exist and are not optional
+        for (var i = 0 ; i < sortedArr.length ; i++) {
             var val = sortedArr[i];
 
-            if (val['resettable'] && parsed_version[val['name']] !== undefined && !val['optional']) {
-                if (typeof(val['values']) !== "undefined") {
+            if (debug) console.log('check part: ', parsed_version[val['name']], typeof parsed_version[val['name']], val, typeof(val['values']), parsed_version);
+
+            // when the slot is undefined, pick a sane start value even when 'resettable' is FALSE for this level
+            if ((val['resettable'] && i > priorityOfIncrementablePart) || (typeof parsed_version[val['name']] === "undefined")) {
+                // when a 'resetTo' entry is available, than one wins:
+                if (typeof val['resetTo'] !== "undefined") {
+                    parsed_version[val['name']] = val['resetTo'];
+                } else if (typeof(val['values']) !== "undefined") {
                     parsed_version[val['name']] = val['values'][0];
                 } else {
-                    parsed_version[val['name']] = val['resetTo'];
+                    parsed_version[val['name']] = 0;
                 }
             }
         }
 
         if (debug) console.log('priority: ', priorityOfIncrementablePart, parsedVersionInfo.least_significant_part_index);
-
-        // (re)set incrementable parts of both higher or lower priority so long as they are undefined
-        // 
-        // This can be necessary when a 'forced' incrementable_part_name of lower priority than 
-        // already available in the parsed_version has been specified.
-        sortedArr = _incrementablePartsSortByField(null, "order");
-        for (var i = 0 ; i < parsedVersionInfo.least_significant_part_index ; i++) {
-            var val = sortedArr[i];
-
-            if (val['resettable'] && parsed_version[val['name']] === undefined) {
-                if (typeof(val['values']) !== "undefined") {
-                    parsed_version[val['name']] = val['values'][0];
-                } else {
-                    parsed_version[val['name']] = val['resetTo'];
-                }
-            }
-        }      
         
         parsedVersionInfo.matched = parsed_version;
                                                                   
