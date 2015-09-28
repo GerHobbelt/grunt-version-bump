@@ -1,10 +1,12 @@
+// jshint node:true
+
 'use strict';
 
-var grunt=require('grunt'), cp = require("child_process"), command, options;
+var grunt = require('grunt'), cp = require("child_process"), command, options;
 
 function callGruntfile(filename, whenDoneCallback) {
     var command, options;
-    command = "grunt --gruntfile "+filename+" --no-color";
+    command = "grunt --gruntfile " + filename + " --no-color";
     options = {cwd: __dirname};
     cp.exec(command, options, whenDoneCallback);
 }
@@ -20,12 +22,12 @@ function callNpmInstallAndGruntfile(filename, whenDoneCallback) {
 
 function contains(where, what) {
     var index = where.toString().indexOf(what);
-    return index>-1;
+    return index > -1;
 }
 
 function notcontains(where, what) {
     var index = where.toString().indexOf(what);
-    return index==-1;
+    return index == -1;
 }
 
 function containsWarning(buffer, warning) {
