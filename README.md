@@ -39,7 +39,7 @@ There is a default version string structure, but you can provide your own struct
 
 By default, the part with the lowest priority gets bumped. In the default version string structure that would be the **build** part.
 
-You can specify a different increment type in 1st argument:
+You can specify a different increment type in the 1st argument:
 ```js
 grunt version_bump:[incrementType]
 ```
@@ -47,7 +47,7 @@ The default version string structure pattern is
 ```
 <major>.<minor>.<patch>-<stage>.<build>
 ```
-Available increment types provided in the default version string strucutre:<br>
+Available increment types provided in the default version string structure:<br>
 Let's assume current version is 1.2.3-SNAPSHOT.4
 ```javascript
     grunt version_bump:major // 2.0.0-SNAPSHOT.1
@@ -63,7 +63,7 @@ Let's assume current version is 1.2.3-SNAPSHOT.4
     grunt version_bump:major --condition=stage:alpha // 2.1.0-RELEASE.1
     grunt version_bump:major --condition=minor:1 // 2.2.0-RELEASE.1
 ```
-As can be seen, bumping a part results in resetting all parts of lower priority. The priority order of the default version string strcuture is **major**, **minor**, **stage**, **patch**, **build**.
+As can be seen, bumping a part results in resetting all parts of lower priority. The priority order of the default version string structure is **major**, **minor**, **stage**, **patch**, **build**.
 
 ### Settings
 
@@ -86,17 +86,17 @@ File path to the version structure file if you wish to override the default.
 #### versionStructure
 Type: `JSON`
 
-A content of a version strcuture. An array of objects with the following fields:
+A content of a version structure. An array of objects with the following fields:
 ##### name
 Type: `String`
 
-The name of the part
+The name of the part.
 
 ##### prefix
 Type: `String`
 Default: `.`
 
-A string to put before the part
+A string to put before the part.
 
 ##### order
 Type: `Integer`
@@ -136,7 +136,7 @@ Type `String:String`
 A condition that only if met a bump will be done. The left part is a name of a part and the right part is the value.
 
 ## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
+In lieu of a formal style guide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
 
 ## Release History
 _(Nothing yet)_
