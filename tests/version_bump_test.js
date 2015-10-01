@@ -41,6 +41,7 @@ function getTypicalErrorMessage(error, stdout, stderr) {
 exports.version_bump_tester = {
 
     setUp: function(done) {
+        grunt.file.mkdir('tests/tmp');
         grunt.file.copy('tests/fixtures/failure_json_with_no_version.json', 'tests/tmp/failure_json_with_no_version.json');
         grunt.file.copy('tests/fixtures/failure_not_a_json.json', 'tests/tmp/failure_not_a_json.json');
         grunt.file.copy('tests/fixtures/success_json_with_version.json', 'tests/tmp/success_json_with_version.json');
