@@ -265,7 +265,7 @@ module.exports = function(grunt) {
 
         _testIncrementablePartsIntegrity_consecutive.obj[field].counter++;
         if (typeof _testIncrementablePartsIntegrity_consecutive.obj[field]['dict'][item[field] + ''] === "undefined") {
-            grunt.fail.fatal(new Error('invalid version structure: ' + field + ' field values should be consecutive'))
+            grunt.fail.fatal(new Error('invalid version structure: ' + field + ' field values should be consecutive'));
         }
         if (_testIncrementablePartsIntegrity_consecutive.obj[field]['dict'][item[field] + ''] === false) {
             _testIncrementablePartsIntegrity_consecutive.obj[field]['dict'][item[field] + ''] = true;
