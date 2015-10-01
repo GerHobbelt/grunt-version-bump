@@ -1,5 +1,5 @@
 #Overview
-A grunt plugin for bumping a version property in JSON files
+A grunt plugin for bumping a version property in JSON files. Can work with many semantic version formats and others out of the box, from short `major.minor` up to advanced `major.minor.patch-stage.build`. 
 
 #Getting Started
 The plugin requires Grunt ~0.4.2
@@ -47,6 +47,8 @@ The default version string structure pattern is
 ```
 <major>.<minor>.<patch>-<stage>.<build>
 ```
+where the `patch`, `stage` and `build` fields are *optional*.
+
 Available increment types provided in the default version string structure:<br>
 Let's assume current version is 1.2.3-SNAPSHOT.4
 ```javascript
@@ -65,6 +67,10 @@ Let's assume current version is 1.2.3-SNAPSHOT.4
 ```
 As can be seen, bumping a part results in resetting all parts of lower priority. The priority order of the default version string structure is **major**, **minor**, **stage**, **patch**, **build**.
 
+The default behaviour is to detect the lowest ranking version part in your input and bump that one.
+
+You override this default behaviour by explicitly specifying the part you want bumped in the plugin option `incrementType`: then the bumped version output will be extended to this level as if the missing levels were *reset*, e.g. bumping the `build` level of input version 1.2 will output 1.2.0-SNAPSHOT.0.
+
 ### Settings
 
 #### files
@@ -78,6 +84,8 @@ Type: `String`
 
 The part to increment. Must be defined in the version string structure.
 
+When this option is not specified, the default version bump behaviour will be assumed as described above.
+
 #### versionStructureFile
 Type: `String`  
 
@@ -86,7 +94,7 @@ File path to the version structure file if you wish to override the default.
 #### versionStructure
 Type: `JSON`
 
-A content of a version structure. An array of objects with the following fields:
+The content of a version structure. An array of objects with the following fields:
 ##### name
 Type: `String`
 
@@ -108,6 +116,13 @@ Type: `Integer`
 
 The priority of the part in the version string. Must be consecutive. 1 is for the highest priority.
 
+##### optional
+Type: `Boolean`
+
+Whether or not the part is optional. 
+
+For example, the default structure defines the parts `patch`, `stage` and `build` as optional.
+
 ##### resettable
 Type: `Boolean`
 
@@ -124,16 +139,20 @@ Type: `Array`
 
 Array of strings ordered by priority of possible values for that part if numbers are not good enough.
 
+For example, the default structure defines these `stage` values: `["SNAPSHOT", "alpha", "beta", "RELEASE"]`
+
 #### callback
 Type: `Function`
 
-Callback function after successfully job, in parameter is set name of new version.
+Callback function which is invoked after a successfully job; its parameter is the new version *string*.
+
+This callback is optional.
 
 ### Command Line Options
 #### condition
 Type `String:String`
 
-A condition that only if met a bump will be done. The left part is a name of a part and the right part is the value.
+A condition that only if met allows the version bump action to run. The left part is a name of a part and the right part is the value.
 
 ## Contributing
 In lieu of a formal style guide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
