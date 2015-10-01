@@ -14,7 +14,7 @@
     "resetTo": 0
 }, {
     "name": "patch",
-    "priority": 4,
+    "priority": 3,
     "order": 3,
     "optional": true,
     "prefix": ".",
@@ -22,11 +22,11 @@
     "resetTo": 0
 }, {
     "name": "stage",
-    "priority": 3,
+    "priority": 4,
     "order": 4,
     "optional": true,
     "prefix": "-",
-    "values": ["SNAPSHOT", "alpha", "beta", "RELEASE"],
+    "values": ["SNAPSHOT", "alpha", "beta", "RC", null],
     "resettable": false
 }, {
     "name": "build",

@@ -135,7 +135,7 @@ exports.version_bump_tester = {
     success_bump_stage: function(test) {
         test.expect(1);
         callGruntfile('success_bump_stage.js', function (error, stdout, stderr) {
-            test.equal(contains(stdout, 'bumped [stage] from 1.2.3-SNAPSHOT.4 to 1.2.0-alpha.1'), true, getTypicalErrorMessage(error, stdout, stderr));
+            test.equal(contains(stdout, 'bumped [stage] from 1.2.3-SNAPSHOT.4 to 1.2.3-alpha.1'), true, getTypicalErrorMessage(error, stdout, stderr));
             test.done();
         });
     },
@@ -175,7 +175,7 @@ exports.version_bump_tester = {
     success_bump_stage_inputversion_quiet: function(test) {
         test.expect(1);
         callGruntfile('success_bump_stage_inputversion_quiet.js', function (error, stdout, stderr) {
-            test.equal(notcontains(stdout, 'bumped [stage] from 2.95.4-alpha.105 to 2.95.0-beta.1'), true, getTypicalErrorMessage(error, stdout, stderr));
+            test.equal(notcontains(stdout, 'bumped [stage] from 2.95.4-alpha.105 to 2.95.4-beta.1'), true, getTypicalErrorMessage(error, stdout, stderr));
             test.done();
         });
     },
@@ -295,7 +295,7 @@ exports.version_bump_tester = {
     success_bump_stage_for_short_version: function(test) {
         test.expect(1);
         callGruntfile('success_bump_stage_for_short_version.js', function (error, stdout, stderr) {
-            test.equal(contains(stdout, 'bumped [stage] from 1.2.3 to 1.2.0-SNAPSHOT'), true, getTypicalErrorMessage(error, stdout, stderr));
+            test.equal(contains(stdout, 'bumped [stage] from 1.2.3 to 1.2.4-SNAPSHOT'), true, getTypicalErrorMessage(error, stdout, stderr));
             test.done();
         });
     },
@@ -305,7 +305,7 @@ exports.version_bump_tester = {
     success_bump_build_for_short_version: function(test) {
         test.expect(1);
         callGruntfile('success_bump_build_for_short_version.js', function (error, stdout, stderr) {
-            test.equal(contains(stdout, 'bumped [build] from 1.2.3 to 1.2.3-SNAPSHOT.1'), true, getTypicalErrorMessage(error, stdout, stderr));
+            test.equal(contains(stdout, 'bumped [build] from 1.2.3 to 1.2.4-SNAPSHOT.1'), true, getTypicalErrorMessage(error, stdout, stderr));
             test.done();
         });
     },
